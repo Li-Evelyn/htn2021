@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
+import "./Landing.css";
 import * as tf from "@tensorflow/tfjs";
 import * as tmPose from "@teachablemachine/pose";
 import * as dance from "./dance.json";
@@ -9,13 +10,13 @@ import * as dance from "./dance.json";
 import AudioReactRecorder, { RecordState } from "audio-react-recorder";
 
 function App() {
-  const URL = "https://teachablemachine.withgoogle.com/models/nMEk7cNI4/";
-  let model, ctx, webcam, labelContainer, maxPredictions, music;
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [audioClassifications, setAudioClassifications] = useState([]);
   // let audioClassifications = [];
   // let audio = new Audio("./YMCA.mp3");
+  let model, ctx, webcam, labelContainer, maxPredictions;
+  const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
   let scores = {
     Y: 0,
     M: 0,
@@ -25,6 +26,8 @@ function App() {
   };
   let should_exit = false;
   let currentStep = 0;
+  let currentTotalScore = 0;
+  let streak = 0;
 
   // let audio = new Audio("./YMCA.mp3");
   const SONG = dance.ymca;
@@ -57,10 +60,16 @@ function App() {
     const resJson = await result.json();
     console.log("audio classifications", resJson);
     setAudioClassifications(resJson);
+    // score the claps
     let elem = document.getElementById("score");
+    let elemTotal = document.getElementById("total");
+    let streakElem = document.getElementById("streak");
     if (resJson.length < 3) {
       // recognition error occured
       console.log("Ok"); // give em a pass for it
+      elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
     } else if (
       resJson.includes("Applause") ||
       resJson.includes("Clapping") ||
@@ -68,15 +77,37 @@ function App() {
     ) {
       elem.innerHTML = "Perfect";
       console.log("perfect");
+      currentTotalScore += 50 + streak * 5;
+      elem.style.color = "green";
+      streak++;
     } else if (resJson.includes("Speech") || resJson.includes("Music")) {
       elem.innerHTML = "Good";
       console.log("Good");
+      elem.style.color = "yellow";
+      currentTotalScore += 30 + streak * 5;
+      streak++;
     } else if (resJson[0] == "Silence") {
       elem.innerHTML = "Miss";
       console.log("Miss");
+      elem.style.color = "red";
+      streak = 0;
     } else {
       elem.innerHTML = "Ok";
       console.log("Ok");
+      elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
+    }
+    elemTotal.innerHTML = currentTotalScore;
+    streakElem.innerHTML = streak;
+    if (streak > 5) {
+      streakElem.style.color = "green";
+    } else if (streak > 3) {
+      streakElem.style.color = "yellow";
+    } else if (streak > 0) {
+      streakElem.style.color = "orange";
+    } else {
+      streakElem.style.color = "white";
     }
     // elem.innerHTML = "I DID A CLAP" + Date.now();
     // .then((res) => res.json())
@@ -138,11 +169,11 @@ function App() {
     canvas.width = size;
     canvas.height = size;
     ctx = canvas.getContext("2d");
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) {
-      // and class labels
-      labelContainer.appendChild(document.createElement("div")); // predictions
-    }
+    // labelContainer = document.getElementById("label-container");
+    // for (let i = 0; i < maxPredictions; i++) {
+    //   // and class labels
+    //   labelContainer.appendChild(document.createElement("div")); // predictions
+    // }
     // audio.play();
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
@@ -179,6 +210,8 @@ function App() {
     currentStep += 1;
     if (currentStep < song.timings.length) {
       await run();
+    } else {
+      console.log(currentTotalScore);
     }
   }
 
@@ -201,7 +234,7 @@ function App() {
       let step = prediction[i].className;
       let prob = prediction[i].probability.toFixed(2);
       const classPrediction = step + ": " + prob;
-      labelContainer.childNodes[i].innerHTML = classPrediction;
+      //labelContainer.childNodes[i].innerHTML = classPrediction;
       // if (currentStep >= 0) {
       //   console.log("got in one layer");
       //   console.log("step: " + step + " current: " + dance.ymca.timings[currentStep].pose);
@@ -214,7 +247,7 @@ function App() {
       // burnerObject[step] = prob > scores[step] ? prob : scores[step];
       scores[step] = prob > scores[step] ? prob : scores[step];
       // setscores(burnerObject);
-      console.log("in predict ", scores);
+      // console.log("in predict ", scores);
     }
 
     // finally draw the poses
@@ -236,18 +269,43 @@ function App() {
   async function calculateScore(i) {
     let pose = dance.ymca.timings[i].pose;
     let elem = document.getElementById("score");
+    let elemTotal = document.getElementById("total");
+    let streakElem = document.getElementById("streak");
     // do a different case for clapping maybe? for sound - rn it's just a generic clapping pose which i guess we can fall back on if we need to do so
     console.log("calculation: ", scores, "score: ", scores[pose]);
     let score = scores[pose];
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
+      currentTotalScore += 50 + streak * 5;
+      elem.style.color = "green";
+      streak++;
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
+      elem.style.color = "yellow";
+      currentTotalScore += 30 + streak * 5;
+      streak++;
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
+      elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
     } else {
       elem.innerHTML = "Miss";
+      elem.style.color = "red";
+      streak = 0;
     }
+    elemTotal.innerHTML = currentTotalScore;
+    streakElem.innerHTML = streak;
+    if (streak > 5) {
+      streakElem.style.color = "green";
+    } else if (streak > 3) {
+      streakElem.style.color = "yellow";
+    } else if (streak > 0) {
+      streakElem.style.color = "orange";
+    } else {
+      streakElem.style.color = "white";
+    }
+    console.log("total: ", currentTotalScore);
     scores = {
       Y: 0,
       M: 0,
@@ -257,57 +315,36 @@ function App() {
     };
   }
 
-  // useEffect(() => {
-  //   audio.load();
-  // });
-
-  // useEffect(() => {
-  //   if (currentStep >= 0) {
-  //     // const interval = setInterval(() => {
-  //     //   loop();
-  //     // }, 5);
-
-  //     return () => {
-  //       clearTimeout(timer);
-  //     };
-  //   }
-  // }, [currentStep]);
-
-  // useEffect(() => {
-  //   if (currentStep >= 0) {
-  //     document.getElementById("currentStep").innerHTML =
-  //       dance.ymca.timings[currentStep].pose;
-  //     const timer = setTimeout(() => {
-  //       if (currentStep < dance.ymca.timings.length - 1) {
-  //         // do score calculation here
-  //         calculateScore();
-  //         setCurrentStep(currentStep + 1);
-  //       }
-  //     }, (dance.ymca.timings[currentStep].beats * 60000) / dance.ymca.bpm);
-  //     return () => {
-  //       clearTimeout(timer);
-  //     };
-  //   }
-  // }, [currentStep]);
-
   return (
     <div className="App">
-      <div>Teachable Machine Pose Model</div>
-      <div>
-        <canvas id="canvas"></canvas>
+      <h1>MEWSdance Model</h1>
+      <div class="info">
+        <div>
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="score">
+          <h2>Current Step:</h2>
+          <div id="currentStep" class="wow"></div>
+          <h2>Current Score:</h2>
+          <div id="score" class="wow"></div>
+          <h2>Total Score:</h2>
+          <div id="total" class="wow"></div>
+          <h2>Streak!</h2>
+          <div id="streak" class="wow"></div>
+        </div>
       </div>
       <audio
         id="audio1"
-        controls="controls"
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
+        class="noshow"
       ></audio>
       <button type="button" onClick={init}>
         Start
       </button>
       <div id="label-container"></div>
-      <div>
+      <div class="hidden">
         <AudioReactRecorder state={recordState} onStop={onStop} />
 
         <button onClick={start}>Start</button>
