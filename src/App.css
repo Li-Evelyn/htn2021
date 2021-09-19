@@ -2,6 +2,7 @@
   text-align: center;
   height: 100vh;
   background-color: rgb(23, 10, 47);
+  width: 100%;
 }
 
 .wow {
@@ -9,10 +10,12 @@
   font-size: 40px;
   letter-spacing: 5pt;
   color: white;
+  width: 300px;
 }
 
 .score {
   text-align: center;
+  width: 1000px;
 }
 
 .noshow {
