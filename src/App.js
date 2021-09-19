@@ -5,6 +5,7 @@ import "./Landing.css";
 import * as tf from "@tensorflow/tfjs";
 import * as tmPose from "@teachablemachine/pose";
 import * as dance from "./dance.json";
+import ReactPlayer from "react-player";
 // import music from "./YMCA.wav";
 
 import AudioReactRecorder, { RecordState } from "audio-react-recorder";
@@ -16,6 +17,7 @@ function App(props) {
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [audioClassifications, setAudioClassifications] = useState([]);
+  const [playing, setPlaying] = useState(false);
   // let audioClassifications = [];
   // let audio = new Audio("./YMCA.mp3");
   let model, ctx, webcam, labelContainer, maxPredictions;
@@ -166,6 +168,7 @@ function App(props) {
     webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
     await webcam.setup(); // request access to the webcam
     await webcam.play();
+    setPlaying(true);
 
     // append/get elements to the DOM
     const canvas = document.getElementById("canvas");
@@ -181,9 +184,11 @@ function App(props) {
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
     start(); // make sure recording starts
+    setPlaying(true);
   }
 
   async function run() {
+    setPlaying(true);
     let song = dance.ymca;
     document.getElementById("currentStep").innerHTML =
       dance.ymca.timings[currentStep].pose;
@@ -215,6 +220,24 @@ function App(props) {
       await run();
     } else {
       console.log(currentTotalScore);
+      let congrats = "";
+      if (challenge && currentTotalScore > challenge) {
+        document.getElementById("endscreen").innerHTML =
+          "You did it! " + "Your final score was " + currentTotalScore + "🎉";
+        document.getElementById("challenge").innerHTML =
+          "Challenge your friends: http://localhost:3000/home?challenge=" +
+          currentTotalScore;
+      } else if (challenge) {
+        document.getElementById("endscreen").innerHTML =
+          "Your final score was " + currentTotalScore + " ):";
+        document.getElementById("challenge").innerHTML = "Try again?";
+      } else {
+        document.getElementById("endscreen").innerHTML =
+          "Your final score was " + currentTotalScore;
+        document.getElementById("challenge").innerHTML =
+          "Challenge your friend: http://localhost:3000/home?challenge=" +
+          currentTotalScore;
+      }
     }
   }
 
@@ -274,7 +297,6 @@ function App(props) {
     let elem = document.getElementById("score");
     let elemTotal = document.getElementById("total");
     let streakElem = document.getElementById("streak");
-    // do a different case for clapping maybe? for sound - rn it's just a generic clapping pose which i guess we can fall back on if we need to do so
     console.log("calculation: ", scores, "score: ", scores[pose]);
     let score = scores[pose];
     if (score >= 0.5) {
@@ -326,6 +348,14 @@ function App(props) {
         <div>
           <canvas id="canvas"></canvas>
         </div>
+        <div>
+          <ReactPlayer
+            url="https://youtu.be/IVgqR3HGXKg"
+            playing={playing}
+            width={"500px"}
+          />
+          ;
+        </div>
         <div class="score">
           <h2>Current Step:</h2>
           <div id="currentStep" class="wow"></div>
@@ -357,11 +387,8 @@ function App(props) {
       </div>
       <div id="currentStep"></div>
       <div id="score"></div>
-      <div class="endscreen">Your final score was XXX!</div>
-      <div class="challenge">
-        Challenge your friend: http://localhost:3000/home?challenge=
-        {currentTotalScore}
-      </div>
+      <div id="endscreen"></div>
+      <div id="challenge"></div>
     </div>
   );
 }
