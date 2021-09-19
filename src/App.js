@@ -229,11 +229,11 @@ function App() {
           <canvas id="canvas"></canvas>
         </div>
         <div class="score">
-          <h1>Current Step:</h1>
+          <h2>Current Step:</h2>
           <div id="currentStep" class="wow"></div>
-          <h1>Current Score:</h1>
+          <h2>Current Score:</h2>
           <div id="score" class="wow"></div>
-          <h1>Total Score:</h1>
+          <h2>Total Score:</h2>
           
         </div>
       </div>

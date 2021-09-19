@@ -1,12 +1,14 @@
 .App {
   text-align: center;
   height: 100vh;
+  background-color: rgb(23, 10, 47);
 }
 
 .wow {
   font-weight:600;
   font-size:40px;
   letter-spacing:5pt;
+  color: white;
 }
 
 .score {

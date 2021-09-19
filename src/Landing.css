@@ -27,6 +27,12 @@ h1 {
     padding-top: 5%;
 }
 
+h2 {
+    color: white;
+    font-weight: 500;
+    font-size: medium;
+}
+
 button {
     margin: auto;
     text-align: center;
