@@ -193,6 +193,7 @@ function App() {
   async function calculateScore(i) {
     let pose = dance.ymca.timings[i].pose;
     let elem = document.getElementById("score");
+    let elemTotal = document.getElementById("total");
     // do a different case for clapping maybe? for sound - rn it's just a generic clapping pose which i guess we can fall back on if we need to do so
     console.log("calculation: ", scores, "score: ", scores[pose]);
     let score = scores[pose];
@@ -216,6 +217,7 @@ function App() {
       elem.style.color = "red";
       streak = 0;
     }
+    elemTotal.innerHTML = currentTotalScore;
     console.log("total: ", currentTotalScore);
     scores = {
       Y: 0,
@@ -272,6 +274,7 @@ function App() {
           <h2>Current Score:</h2>
           <div id="score" class="wow"></div>
           <h2>Total Score:</h2>
+          <div id="total" class="wow"></div>
         </div>
       </div>
       <audio
