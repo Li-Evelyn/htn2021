@@ -13,9 +13,9 @@ function App() {
   let model, ctx, webcam, labelContainer, maxPredictions, music;
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
+  const [audioClassifications, setAudioClassifications] = useState([]);
+  // let audioClassifications = [];
   // let audio = new Audio("./YMCA.mp3");
-  const runeURL = "https://0e1c-72-142-79-238.ngrok.io/static.rune";
-  const apiURL = "http://localhost:3001";
   let scores = {
     Y: 0,
     M: 0,
@@ -26,8 +26,6 @@ function App() {
   let should_exit = false;
   let currentStep = 0;
 
-  const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
-  let model, ctx, webcam, labelContainer, maxPredictions;
   // let audio = new Audio("./YMCA.mp3");
   const SONG = dance.ymca;
 
@@ -41,10 +39,54 @@ function App() {
     console.log("stopped");
   }
 
-  function onStop(audioData) {
+  async function onStop(audioData) {
     console.log("hello");
     console.log("audioData", audioData);
     setRecordedAudio(audioData);
+    // send audio for classification
+    var fd = new FormData();
+    console.log("recorded audio", audioData);
+    var audioFile = new File([audioData.blob], "recorded_audio");
+    fd.append("audio", audioFile);
+    console.log("sending audio");
+    const result = await fetch("/api/classify", {
+      headers: { Accept: "application/json" },
+      method: "POST",
+      body: fd,
+    });
+    const resJson = await result.json();
+    console.log("audio classifications", resJson);
+    setAudioClassifications(resJson);
+    let elem = document.getElementById("score");
+    if (resJson.length < 3) {
+      // recognition error occured
+      console.log("Ok"); // give em a pass for it
+    } else if (
+      resJson.includes("Applause") ||
+      resJson.includes("Clapping") ||
+      resJson.includes("Sound effect")
+    ) {
+      elem.innerHTML = "Perfect";
+      console.log("perfect");
+    } else if (resJson.includes("Speech") || resJson.includes("Music")) {
+      elem.innerHTML = "Good";
+      console.log("Good");
+    } else if (resJson[0] == "Silence") {
+      elem.innerHTML = "Miss";
+      console.log("Miss");
+    } else {
+      elem.innerHTML = "Ok";
+      console.log("Ok");
+    }
+    // elem.innerHTML = "I DID A CLAP" + Date.now();
+    // .then((res) => res.json())
+    // .then((result) => {
+    //   console.log(result);
+    //   setAudioClassifications(result);
+    //   // audioClassifications = result;
+    //   console.log("audio classifications", audioClassifications);
+    // });
+    // recordedAudio = audioData;
   }
 
   useEffect(() => {
@@ -59,17 +101,19 @@ function App() {
 
   const sendAudio = async () => {
     var fd = new FormData();
+    console.log("recorded audio", recordedAudio);
     var audioFile = new File([recordedAudio.blob], "recorded_audio");
     fd.append("audio", audioFile);
     console.log("sending audio");
-    fetch("/api/classify", {
+    const result = await fetch("/api/classify", {
       headers: { Accept: "application/json" },
       method: "POST",
       body: fd,
-    })
-      .then((res) => res.json())
-      .then((result) => console.log(result));
+    });
+    // .then((res) => res.json())
+    // .then((result) => console.log(result));
     // console.log(res);
+    return result.json();
   };
 
   async function init() {
@@ -102,12 +146,19 @@ function App() {
     // audio.play();
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
+    start(); // make sure recording starts
   }
 
   async function run() {
     let song = dance.ymca;
     document.getElementById("currentStep").innerHTML =
       dance.ymca.timings[currentStep].pose;
+    // start recording at "clap", end at "endclap"
+    if (dance.ymca.timings[currentStep].pose == "clap") {
+      start();
+    } else if (dance.ymca.timings[currentStep].pose == "endclap") {
+      stop();
+    }
     const timer = setTimeout(() => {
       should_exit = true;
     }, (dance.ymca.timings[currentStep].beats * 60000) / dance.ymca.bpm);
@@ -115,11 +166,6 @@ function App() {
       webcam.update();
       await predict();
     }
-    // loop();
-    // while (let i = 0; i < song.timings.length; i++) {
-    //
-
-    // }
     await calculateScore(currentStep);
     scores = {
       Y: 0,

@@ -9,15 +9,27 @@
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "Y",
@@ -37,15 +49,27 @@
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "clap",
-                "beats" : 1
+                "beats" : 0.2
+            },
+            {
+                "pose": "endclap",
+                "beats": 0.8
             },
             {
                 "pose" : "Y",
