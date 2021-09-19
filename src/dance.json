@@ -1,34 +1,39 @@
 {
-    "ymca": {
+    "ymca" : {
         "audio_file" : "",
+        "bpm" : 128,
         "timings" : [
             {
-                "pose" : "clap",
-                "timeout" : 1
+                "pose" : "neutral",
+                "beats" : 5
             },
             {
                 "pose" : "clap",
-                "timeout" : 1
+                "beats" : 1
             },
             {
                 "pose" : "clap",
-                "timeout" : 1
+                "beats" : 1
+            },
+            {
+                "pose" : "clap",
+                "beats" : 1
             },
             {
                 "pose" : "Y",
-                "timeout" : 1
+                "beats" : 2
             },
             {
                 "pose" : "M",
-                "timeout" : 1
+                "beats" : 1
             },
             {
                 "pose" : "C",
-                "timeout" : 1
+                "beats" : 0.5
             },
             {
                 "pose" : "A",
-                "timeout" : 1
+                "beats" : 1.5
             }
         ]
     }
