@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
+import "./Landing.css";
 import * as tf from "@tensorflow/tfjs";
 import * as tmPose from "@teachablemachine/pose";
 import * as dance from "./dance.json";
@@ -53,11 +54,11 @@ function App() {
     canvas.width = size;
     canvas.height = size;
     ctx = canvas.getContext("2d");
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) {
-      // and class labels
-      labelContainer.appendChild(document.createElement("div")); // predictions
-    }
+    // labelContainer = document.getElementById("label-container");
+    // for (let i = 0; i < maxPredictions; i++) {
+    //   // and class labels
+    //   labelContainer.appendChild(document.createElement("div")); // predictions
+    // }
     // audio.play();
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
@@ -127,7 +128,7 @@ function App() {
       let step = prediction[i].className;
       let prob = prediction[i].probability.toFixed(2);
       const classPrediction = step + ": " + prob;
-      labelContainer.childNodes[i].innerHTML = classPrediction;
+      //labelContainer.childNodes[i].innerHTML = classPrediction;
       // if (currentStep >= 0) {
       //   console.log("got in one layer");
       //   console.log("step: " + step + " current: " + dance.ymca.timings[currentStep].pose);
@@ -167,12 +168,16 @@ function App() {
     let score = scores[pose];
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
+      elem.style.color = "green";
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
+      elem.style.color = "yellow";
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
+      elem.style.color = "orange";
     } else {
       elem.innerHTML = "Miss";
+      elem.style.color = "red";
     }
     scores = {
       Y: 0,
@@ -218,9 +223,19 @@ function App() {
 
   return (
     <div className="App">
-      <div>Teachable Machine Pose Model</div>
-      <div>
-        <canvas id="canvas"></canvas>
+      <h1>MEWSdance Model</h1>
+      <div class="info">
+        <div>
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="score">
+          <h1>Current Step:</h1>
+          <div id="currentStep" class="wow"></div>
+          <h1>Current Score:</h1>
+          <div id="score" class="wow"></div>
+          <h1>Total Score:</h1>
+          
+        </div>
       </div>
       <audio
         id="audio1"
@@ -228,13 +243,12 @@ function App() {
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
+        class="noshow"
       ></audio>
       <button type="button" onClick={init}>
         Start
       </button>
-      <div id="label-container"></div>
-      <div id="currentStep"></div>
-      <div id="score"></div>
+      {/* <div id="label-container"></div> */}
     </div>
   );
 }

@@ -1,5 +1,28 @@
 .App {
   text-align: center;
+  height: 100vh;
+}
+
+.wow {
+  font-weight:600;
+  font-size:40px;
+  letter-spacing:5pt;
+}
+
+.score {
+  text-align: center;
+}
+
+.noshow {
+  display: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 900px;
+  margin: auto;
 }
 
 .App-logo {
