@@ -65,3 +65,28 @@
 .hidden {
   display: none;
 }
+
+.endscreen {
+  font-weight: 500;
+  font-size: 30px;
+  letter-spacing: 5pt;
+  color: white;
+  margin-top: 20px;
+}
+
+.challenge {
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: 2pt;
+  color: orange;
+  margin-top: 8px;
+}
+
+h3 {
+  font-size: large;
+  font-weight: 500;
+  letter-spacing: 2pt;
+  color: yellow;
+  text-align: center;
+  font-style: italic;
+}

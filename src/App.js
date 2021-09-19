@@ -9,7 +9,10 @@ import * as dance from "./dance.json";
 
 import AudioReactRecorder, { RecordState } from "audio-react-recorder";
 
-function App() {
+function App(props) {
+  const search = props.location.search;
+  const challenge = new URLSearchParams(search).get("challenge");
+  console.log("chllange", challenge);
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   const [audioClassifications, setAudioClassifications] = useState([]);
@@ -68,7 +71,7 @@ function App() {
       // recognition error occured
       console.log("Ok"); // give em a pass for it
       elem.style.color = "orange";
-      currentTotalScore += 15;
+      // currentTotalScore += 15;
       streak = 0;
     } else if (
       resJson.includes("Applause") ||
@@ -77,26 +80,26 @@ function App() {
     ) {
       elem.innerHTML = "Perfect";
       console.log("perfect");
-      currentTotalScore += 50 + streak * 5;
+      // currentTotalScore += 50 + streak * 5;
       elem.style.color = "green";
-      streak++;
+      // streak++;
     } else if (resJson.includes("Speech") || resJson.includes("Music")) {
       elem.innerHTML = "Good";
       console.log("Good");
       elem.style.color = "yellow";
-      currentTotalScore += 30 + streak * 5;
+      // currentTotalScore += 30 + streak * 5;
       streak++;
     } else if (resJson[0] == "Silence") {
       elem.innerHTML = "Miss";
       console.log("Miss");
       elem.style.color = "red";
-      streak = 0;
+      // streak = 0;
     } else {
       elem.innerHTML = "Ok";
       console.log("Ok");
       elem.style.color = "orange";
-      currentTotalScore += 15;
-      streak = 0;
+      // currentTotalScore += 15;
+      // streak = 0;
     }
     elemTotal.innerHTML = currentTotalScore;
     streakElem.innerHTML = streak;
@@ -318,6 +321,7 @@ function App() {
   return (
     <div className="App">
       <h1>MEWSdance Model</h1>
+      {challenge && <h3>CAN YOU BEAT {challenge}?</h3>}
       <div class="info">
         <div>
           <canvas id="canvas"></canvas>
@@ -353,6 +357,11 @@ function App() {
       </div>
       <div id="currentStep"></div>
       <div id="score"></div>
+      <div class="endscreen">Your final score was XXX!</div>
+      <div class="challenge">
+        Challenge your friend: http://localhost:3000/home?challenge=
+        {currentTotalScore}
+      </div>
     </div>
   );
 }
