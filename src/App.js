@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
+import "./Landing.css";
 import * as tf from "@tensorflow/tfjs";
 import * as tmPose from "@teachablemachine/pose";
 import * as dance from "./dance.json";
@@ -94,11 +95,11 @@ function App() {
     canvas.width = size;
     canvas.height = size;
     ctx = canvas.getContext("2d");
-    labelContainer = document.getElementById("label-container");
-    for (let i = 0; i < maxPredictions; i++) {
-      // and class labels
-      labelContainer.appendChild(document.createElement("div")); // predictions
-    }
+    // labelContainer = document.getElementById("label-container");
+    // for (let i = 0; i < maxPredictions; i++) {
+    //   // and class labels
+    //   labelContainer.appendChild(document.createElement("div")); // predictions
+    // }
     // audio.play();
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
@@ -157,7 +158,7 @@ function App() {
       let step = prediction[i].className;
       let prob = prediction[i].probability.toFixed(2);
       const classPrediction = step + ": " + prob;
-      labelContainer.childNodes[i].innerHTML = classPrediction;
+      //labelContainer.childNodes[i].innerHTML = classPrediction;
       // if (currentStep >= 0) {
       //   console.log("got in one layer");
       //   console.log("step: " + step + " current: " + dance.ymca.timings[currentStep].pose);
@@ -198,17 +199,21 @@ function App() {
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
       currentTotalScore += 50 + (streak * 5);
+      elem.style.color = "green";
       streak++;
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
+      elem.style.color = "yellow";
       currentTotalScore += 30 + (streak * 5);
       streak++;
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
+      elem.style.color = "orange";
       currentTotalScore += 15;
       streak = 0;
     } else {
       elem.innerHTML = "Miss";
+      elem.style.color = "red";
       streak = 0;
     }
     console.log("total: ", currentTotalScore);
@@ -256,15 +261,25 @@ function App() {
 
   return (
     <div className="App">
-      <div>Teachable Machine Pose Model</div>
-      <div>
-        <canvas id="canvas"></canvas>
+      <h1>MEWSdance Model</h1>
+      <div class="info">
+        <div>
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="score">
+          <h2>Current Step:</h2>
+          <div id="currentStep" class="wow"></div>
+          <h2>Current Score:</h2>
+          <div id="score" class="wow"></div>
+          <h2>Total Score:</h2>
+        </div>
       </div>
       <audio
         id="audio1"
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
+        class="noshow"
       ></audio>
       <button type="button" onClick={init}>
         Start
