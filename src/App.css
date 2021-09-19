@@ -5,9 +5,9 @@
 }
 
 .wow {
-  font-weight:600;
-  font-size:40px;
-  letter-spacing:5pt;
+  font-weight: 600;
+  font-size: 40px;
+  letter-spacing: 5pt;
   color: white;
 }
 
@@ -60,4 +60,8 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.hidden {
+  display: none;
 }

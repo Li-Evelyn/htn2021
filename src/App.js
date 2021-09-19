@@ -12,10 +12,12 @@ import AudioReactRecorder, { RecordState } from "audio-react-recorder";
 function App() {
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
+  const [audioClassifications, setAudioClassifications] = useState([]);
+  // let audioClassifications = [];
   // let audio = new Audio("./YMCA.mp3");
-  const runeURL = "https://0e1c-72-142-79-238.ngrok.io/static.rune";
-  const apiURL = "http://localhost:3001";
-  let scores = { // could convert to single score for the step
+  let model, ctx, webcam, labelContainer, maxPredictions;
+  const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
+  let scores = {
     Y: 0,
     M: 0,
     C: 0,
@@ -27,8 +29,6 @@ function App() {
   let currentTotalScore = 0;
   let streak = 0;
 
-  const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
-  let model, ctx, webcam, labelContainer, maxPredictions;
   // let audio = new Audio("./YMCA.mp3");
   const SONG = dance.ymca;
 
@@ -42,10 +42,82 @@ function App() {
     console.log("stopped");
   }
 
-  function onStop(audioData) {
+  async function onStop(audioData) {
     console.log("hello");
     console.log("audioData", audioData);
     setRecordedAudio(audioData);
+    // send audio for classification
+    var fd = new FormData();
+    console.log("recorded audio", audioData);
+    var audioFile = new File([audioData.blob], "recorded_audio");
+    fd.append("audio", audioFile);
+    console.log("sending audio");
+    const result = await fetch("/api/classify", {
+      headers: { Accept: "application/json" },
+      method: "POST",
+      body: fd,
+    });
+    const resJson = await result.json();
+    console.log("audio classifications", resJson);
+    setAudioClassifications(resJson);
+    // score the claps
+    let elem = document.getElementById("score");
+    let elemTotal = document.getElementById("total");
+    let streakElem = document.getElementById("streak");
+    if (resJson.length < 3) {
+      // recognition error occured
+      console.log("Ok"); // give em a pass for it
+      elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
+    } else if (
+      resJson.includes("Applause") ||
+      resJson.includes("Clapping") ||
+      resJson.includes("Sound effect")
+    ) {
+      elem.innerHTML = "Perfect";
+      console.log("perfect");
+      currentTotalScore += 50 + streak * 5;
+      elem.style.color = "green";
+      streak++;
+    } else if (resJson.includes("Speech") || resJson.includes("Music")) {
+      elem.innerHTML = "Good";
+      console.log("Good");
+      elem.style.color = "yellow";
+      currentTotalScore += 30 + streak * 5;
+      streak++;
+    } else if (resJson[0] == "Silence") {
+      elem.innerHTML = "Miss";
+      console.log("Miss");
+      elem.style.color = "red";
+      streak = 0;
+    } else {
+      elem.innerHTML = "Ok";
+      console.log("Ok");
+      elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
+    }
+    elemTotal.innerHTML = currentTotalScore;
+    streakElem.innerHTML = streak;
+    if (streak > 5) {
+      streakElem.style.color = "green";
+    } else if (streak > 3) {
+      streakElem.style.color = "yellow";
+    } else if (streak > 0) {
+      streakElem.style.color = "orange";
+    } else {
+      streakElem.style.color = "white";
+    }
+    // elem.innerHTML = "I DID A CLAP" + Date.now();
+    // .then((res) => res.json())
+    // .then((result) => {
+    //   console.log(result);
+    //   setAudioClassifications(result);
+    //   // audioClassifications = result;
+    //   console.log("audio classifications", audioClassifications);
+    // });
+    // recordedAudio = audioData;
   }
 
   useEffect(() => {
@@ -60,17 +132,19 @@ function App() {
 
   const sendAudio = async () => {
     var fd = new FormData();
+    console.log("recorded audio", recordedAudio);
     var audioFile = new File([recordedAudio.blob], "recorded_audio");
     fd.append("audio", audioFile);
     console.log("sending audio");
-    fetch("/api/classify", {
+    const result = await fetch("/api/classify", {
       headers: { Accept: "application/json" },
       method: "POST",
       body: fd,
-    })
-      .then((res) => res.json())
-      .then((result) => console.log(result));
+    });
+    // .then((res) => res.json())
+    // .then((result) => console.log(result));
     // console.log(res);
+    return result.json();
   };
 
   async function init() {
@@ -103,12 +177,19 @@ function App() {
     // audio.play();
     document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
+    start(); // make sure recording starts
   }
 
   async function run() {
     let song = dance.ymca;
     document.getElementById("currentStep").innerHTML =
       dance.ymca.timings[currentStep].pose;
+    // start recording at "clap", end at "endclap"
+    if (dance.ymca.timings[currentStep].pose == "clap") {
+      start();
+    } else if (dance.ymca.timings[currentStep].pose == "endclap") {
+      stop();
+    }
     const timer = setTimeout(() => {
       should_exit = true;
     }, (dance.ymca.timings[currentStep].beats * 60000) / dance.ymca.bpm);
@@ -116,11 +197,6 @@ function App() {
       webcam.update();
       await predict();
     }
-    // loop();
-    // while (let i = 0; i < song.timings.length; i++) {
-    //
-
-    // }
     await calculateScore(currentStep);
     scores = {
       Y: 0,
@@ -194,18 +270,19 @@ function App() {
     let pose = dance.ymca.timings[i].pose;
     let elem = document.getElementById("score");
     let elemTotal = document.getElementById("total");
+    let streakElem = document.getElementById("streak");
     // do a different case for clapping maybe? for sound - rn it's just a generic clapping pose which i guess we can fall back on if we need to do so
     console.log("calculation: ", scores, "score: ", scores[pose]);
     let score = scores[pose];
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
-      currentTotalScore += 50 + (streak * 5);
+      currentTotalScore += 50 + streak * 5;
       elem.style.color = "green";
       streak++;
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
       elem.style.color = "yellow";
-      currentTotalScore += 30 + (streak * 5);
+      currentTotalScore += 30 + streak * 5;
       streak++;
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
@@ -218,6 +295,16 @@ function App() {
       streak = 0;
     }
     elemTotal.innerHTML = currentTotalScore;
+    streakElem.innerHTML = streak;
+    if (streak > 5) {
+      streakElem.style.color = "green";
+    } else if (streak > 3) {
+      streakElem.style.color = "yellow";
+    } else if (streak > 0) {
+      streakElem.style.color = "orange";
+    } else {
+      streakElem.style.color = "white";
+    }
     console.log("total: ", currentTotalScore);
     scores = {
       Y: 0,
@@ -227,39 +314,6 @@ function App() {
       clap: 0,
     };
   }
-
-  // useEffect(() => {
-  //   audio.load();
-  // });
-
-  // useEffect(() => {
-  //   if (currentStep >= 0) {
-  //     // const interval = setInterval(() => {
-  //     //   loop();
-  //     // }, 5);
-
-  //     return () => {
-  //       clearTimeout(timer);
-  //     };
-  //   }
-  // }, [currentStep]);
-
-  // useEffect(() => {
-  //   if (currentStep >= 0) {
-  //     document.getElementById("currentStep").innerHTML =
-  //       dance.ymca.timings[currentStep].pose;
-  //     const timer = setTimeout(() => {
-  //       if (currentStep < dance.ymca.timings.length - 1) {
-  //         // do score calculation here
-  //         calculateScore();
-  //         setCurrentStep(currentStep + 1);
-  //       }
-  //     }, (dance.ymca.timings[currentStep].beats * 60000) / dance.ymca.bpm);
-  //     return () => {
-  //       clearTimeout(timer);
-  //     };
-  //   }
-  // }, [currentStep]);
 
   return (
     <div className="App">
@@ -275,6 +329,8 @@ function App() {
           <div id="score" class="wow"></div>
           <h2>Total Score:</h2>
           <div id="total" class="wow"></div>
+          <h2>Streak!</h2>
+          <div id="streak" class="wow"></div>
         </div>
       </div>
       <audio
@@ -288,7 +344,7 @@ function App() {
         Start
       </button>
       <div id="label-container"></div>
-      <div>
+      <div class="hidden">
         <AudioReactRecorder state={recordState} onStop={onStop} />
 
         <button onClick={start}>Start</button>
