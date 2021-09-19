@@ -5,19 +5,17 @@ import "./Landing.css";
 import * as tf from "@tensorflow/tfjs";
 import * as tmPose from "@teachablemachine/pose";
 import * as dance from "./dance.json";
-import music from "./YMCA.wav";
+// import music from "./YMCA.wav";
+
+import AudioReactRecorder, { RecordState } from "audio-react-recorder";
 
 function App() {
-  // const [currentStep, setCurrentStep] = useState(-1);
-  // const [stepScores, setStepScores] = useState({
-  //   Y: 0,
-  //   M: 0,
-  //   C: 0,
-  //   A: 0,
-  //   clap: 0,
-  // });
-  // const [score, setScore] = useState(0);
-  let scores = {
+  const [recordState, setRecordState] = useState(null);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  // let audio = new Audio("./YMCA.mp3");
+  const runeURL = "https://0e1c-72-142-79-238.ngrok.io/static.rune";
+  const apiURL = "http://localhost:3001";
+  let scores = { // could convert to single score for the step
     Y: 0,
     M: 0,
     C: 0,
@@ -26,11 +24,54 @@ function App() {
   };
   let should_exit = false;
   let currentStep = 0;
+  let currentTotalScore = 0;
+  let streak = 0;
 
   const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
   let model, ctx, webcam, labelContainer, maxPredictions;
   // let audio = new Audio("./YMCA.mp3");
   const SONG = dance.ymca;
+
+  function start() {
+    setRecordState(RecordState.START);
+    console.log("recording");
+  }
+
+  function stop() {
+    setRecordState(RecordState.STOP);
+    console.log("stopped");
+  }
+
+  function onStop(audioData) {
+    console.log("hello");
+    console.log("audioData", audioData);
+    setRecordedAudio(audioData);
+  }
+
+  useEffect(() => {
+    const classifyAudio = async () => {
+      fetch("/api")
+        .then((res) => res.json())
+        .then((list) => console.log(list));
+    };
+
+    classifyAudio();
+  }, []);
+
+  const sendAudio = async () => {
+    var fd = new FormData();
+    var audioFile = new File([recordedAudio.blob], "recorded_audio");
+    fd.append("audio", audioFile);
+    console.log("sending audio");
+    fetch("/api/classify", {
+      headers: { Accept: "application/json" },
+      method: "POST",
+      body: fd,
+    })
+      .then((res) => res.json())
+      .then((result) => console.log(result));
+    // console.log(res);
+  };
 
   async function init() {
     const modelURL = URL + "model.json";
@@ -93,28 +134,17 @@ function App() {
     currentStep += 1;
     if (currentStep < song.timings.length) {
       await run();
+    } else {
+      console.log(currentTotalScore);
     }
   }
 
   async function loop() {
     console.log("loopin");
-    // if (webcam) {
     webcam.update();
-    // } else {
-    //   webcam = new tmPose.Webcam(size, size, flip); // width, height, flip
-    //   await webcam.setup()
-    //   await webcam.play();
-    // } // update the webcam frame
     await predict();
     window.requestAnimationFrame(loop);
   }
-
-  // useEffect(() => {
-  //   if (model) {
-  //     console.log("the model exists and i am predicting");
-  //     predict();
-  //   }
-  // }, [stepScores]);
 
   async function predict() {
     // Prediction #1: run input through posenet
@@ -141,7 +171,7 @@ function App() {
       // burnerObject[step] = prob > scores[step] ? prob : scores[step];
       scores[step] = prob > scores[step] ? prob : scores[step];
       // setscores(burnerObject);
-      console.log("in predict ", scores);
+      // console.log("in predict ", scores);
     }
 
     // finally draw the poses
@@ -168,17 +198,25 @@ function App() {
     let score = scores[pose];
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
+      currentTotalScore += 50 + (streak * 5);
       elem.style.color = "green";
+      streak++;
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
       elem.style.color = "yellow";
+      currentTotalScore += 30 + (streak * 5);
+      streak++;
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
       elem.style.color = "orange";
+      currentTotalScore += 15;
+      streak = 0;
     } else {
       elem.innerHTML = "Miss";
       elem.style.color = "red";
+      streak = 0;
     }
+    console.log("total: ", currentTotalScore);
     scores = {
       Y: 0,
       M: 0,
@@ -234,12 +272,10 @@ function App() {
           <h2>Current Score:</h2>
           <div id="score" class="wow"></div>
           <h2>Total Score:</h2>
-          
         </div>
       </div>
       <audio
         id="audio1"
-        controls="controls"
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
@@ -248,7 +284,16 @@ function App() {
       <button type="button" onClick={init}>
         Start
       </button>
-      {/* <div id="label-container"></div> */}
+      <div id="label-container"></div>
+      <div>
+        <AudioReactRecorder state={recordState} onStop={onStop} />
+
+        <button onClick={start}>Start</button>
+        <button onClick={stop}>Stop</button>
+        <button onClick={sendAudio}>Send Audio</button>
+      </div>
+      <div id="currentStep"></div>
+      <div id="score"></div>
     </div>
   );
 }
