@@ -181,7 +181,7 @@ function App(props) {
     //   labelContainer.appendChild(document.createElement("div")); // predictions
     // }
     // audio.play();
-    document.getElementById("audio1").play();
+    // document.getElementById("audio1").play();
     window.requestAnimationFrame(run);
     start(); // make sure recording starts
     setPlaying(true);
@@ -367,13 +367,13 @@ function App(props) {
           <div id="streak" class="wow"></div>
         </div>
       </div>
-      <audio
+      {/* <audio
         id="audio1"
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
         class="noshow"
-      ></audio>
+      ></audio> */}
       <button type="button" onClick={init}>
         Start
       </button>
