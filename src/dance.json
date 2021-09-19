@@ -34,6 +34,34 @@
             {
                 "pose" : "A",
                 "beats" : 1.5
+            },
+            {
+                "pose" : "clap",
+                "beats" : 1
+            },
+            {
+                "pose" : "clap",
+                "beats" : 1
+            },
+            {
+                "pose" : "clap",
+                "beats" : 1
+            },
+            {
+                "pose" : "Y",
+                "beats" : 2
+            },
+            {
+                "pose" : "M",
+                "beats" : 1
+            },
+            {
+                "pose" : "C",
+                "beats" : 0.5
+            },
+            {
+                "pose" : "A",
+                "beats" : 1.5
             }
         ]
     }
