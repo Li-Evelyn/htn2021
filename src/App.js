@@ -9,14 +9,12 @@ import * as dance from "./dance.json";
 import AudioReactRecorder, { RecordState } from "audio-react-recorder";
 
 function App() {
-  const URL = "https://teachablemachine.withgoogle.com/models/nMEk7cNI4/";
-  let model, ctx, webcam, labelContainer, maxPredictions, music;
   const [recordState, setRecordState] = useState(null);
   const [recordedAudio, setRecordedAudio] = useState(null);
   // let audio = new Audio("./YMCA.mp3");
   const runeURL = "https://0e1c-72-142-79-238.ngrok.io/static.rune";
   const apiURL = "http://localhost:3001";
-  let scores = {
+  let scores = { // could convert to single score for the step
     Y: 0,
     M: 0,
     C: 0,
@@ -25,6 +23,8 @@ function App() {
   };
   let should_exit = false;
   let currentStep = 0;
+  let currentTotalScore = 0;
+  let streak = 0;
 
   const URL = "https://teachablemachine.withgoogle.com/models/iVB1AnIP3/";
   let model, ctx, webcam, labelContainer, maxPredictions;
@@ -133,6 +133,8 @@ function App() {
     currentStep += 1;
     if (currentStep < song.timings.length) {
       await run();
+    } else {
+      console.log(currentTotalScore);
     }
   }
 
@@ -168,7 +170,7 @@ function App() {
       // burnerObject[step] = prob > scores[step] ? prob : scores[step];
       scores[step] = prob > scores[step] ? prob : scores[step];
       // setscores(burnerObject);
-      console.log("in predict ", scores);
+      // console.log("in predict ", scores);
     }
 
     // finally draw the poses
@@ -195,13 +197,21 @@ function App() {
     let score = scores[pose];
     if (score >= 0.5) {
       elem.innerHTML = "Perfect";
+      currentTotalScore += 50 + (streak * 5);
+      streak++;
     } else if (score >= 0.25) {
       elem.innerHTML = "Good";
+      currentTotalScore += 30 + (streak * 5);
+      streak++;
     } else if (score >= 0.1) {
       elem.innerHTML = "OK";
+      currentTotalScore += 15;
+      streak = 0;
     } else {
       elem.innerHTML = "Miss";
+      streak = 0;
     }
+    console.log("total: ", currentTotalScore);
     scores = {
       Y: 0,
       M: 0,
@@ -252,7 +262,6 @@ function App() {
       </div>
       <audio
         id="audio1"
-        controls="controls"
         preload="auto"
         src="http://freewavesamples.com/files/Korg-Triton-Slow-Choir-ST-C4.wav"
         type="audio/wav"
