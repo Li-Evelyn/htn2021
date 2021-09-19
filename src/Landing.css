@@ -1,0 +1,47 @@
+/* .landing {
+    background-color: rgb(9, 9, 22);
+    height: 100vh;
+} */
+
+.filler {
+    height: 70px;
+}
+
+.background {
+    background-image: url('./images/name.png');
+    height: 140px;
+    width: 316px;
+    display: flex;
+    justify-content: center;
+    margin: auto;
+    background-repeat: no-repeat;
+}
+
+h1 {
+    font-size: large;
+    font-weight: 500;
+    letter-spacing: 1em;
+    color: coral;
+    text-align: center;
+    padding-top: 5%;
+    margin-bottom: 5%;
+}
+
+button {
+    margin: auto;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    background-color: rgb(53, 53, 182);
+    border-radius: 5px;
+    border: none;
+    font-weight: 500;
+    color: cornsilk;
+    padding: 10px;
+    letter-spacing: 0.5em;
+
+}
+
+button:hover {
+    background-color:rgb(97, 97, 212);
+}
